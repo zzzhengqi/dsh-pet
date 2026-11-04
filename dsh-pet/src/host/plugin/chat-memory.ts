@@ -14,6 +14,7 @@ import { findPetInstance, readAllConfig, removeRoundsByTs, sliceMemoryRounds } f
 import type { PetImageRef } from '../image-attachment.ts';
 import { limitPool, matchMeme, pickMeme, readMemePool } from '../memes.ts';
 import { generateWhisper } from '../whisper.ts';
+import { failureNotice } from '../failure-notice.ts';
 import { createMemoryOrphans } from './memory-orphans.ts';
 import { configuredModel } from '../model-selection.ts';
 import { SLEEP_TALK_INSTRUCTION } from '../whisper.ts';
@@ -171,6 +172,12 @@ export function createChatMemory(deps: ChatMemoryInput) {
           result.reason +
           (result.message ? ' ' + result.message : ''),
       );
+      // fork：用户主动点的（菜单 / 配图 / 斜杠命令）要给答复，否则「点了没反应」会被当成坏了；
+      // 周期碎碎念仍静默，不每 5 分钟弹一次错误。
+      if (kind === 'manual') {
+        const notice = failureNotice(result.reason, result.message);
+        if (notice) state.writePet(petId, 'say', { text: notice, anim: false });
+      }
       // 真实 reason 原样带回：路由若把失败硬编码成 generate-error，独立模式下已算出的
       // provider-missing 就会在边界被吞掉（API.md 描述的降级 reason 正是它）。
       return result;
@@ -278,7 +285,19 @@ export function createChatMemory(deps: ChatMemoryInput) {
         preferred: configuredModel(found.conf, 'chatModel'),
         image,
       });
-      if (!generated.ok) return generated;
+      if (!generated.ok) {
+        // fork：对话是用户主动发起的，失败要在气泡里说明原因（输入框发送后已关闭，没有别处可提示）
+        log.warn(
+          '[dsh-pet] 对话生成失败 pet=' +
+            petId +
+            ' reason=' +
+            generated.reason +
+            (generated.message ? ' ' + generated.message : ''),
+        );
+        const notice = failureNotice(generated.reason, generated.message);
+        if (notice) state.writePet(petId, 'say', { text: notice, anim: false });
+        return generated;
+      }
       const now = Date.now();
       // 用户上传的图只存不送：记忆要能还原「这一轮带过图」（聊天记录存档），但不把图本体重发给模型；
       // AI 配的图只回填名称标记（见 chat.ts 的 historyMarkersOf），同样不带图本体。
