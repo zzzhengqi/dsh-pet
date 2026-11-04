@@ -34,8 +34,7 @@ step02（透明视频）有**两条路线，按需二选一**（默认自动、�
 ```sh
 cd scripts
 # 路线 A（默认）：自动绿幕抠像（HSV 色相，无需人工）
-python watermark_step01.py   # 水印遮罩填充 → step01/
-python chroma_step02.py      # 绿幕抠像转透明 → step02/
+python chroma_step02.py      # video/ 源视频绿幕抠像转透明 → step02/
 
 # 路线 B（可选）：PR 手工抠像覆盖（针对含第三方物品/自动抠像效果不佳的动作）
 #   1. 在 PR 里手工抠像，导出带 alpha 的透明 .mov（如 ProRes 4444 with Alpha）
@@ -47,7 +46,9 @@ python normalize_step03.py   # 归一化 2160×1215 统一站立居中 → step0
 python encode_thumbs.py      # 转码 640×360 播放变体 → step04/
 ```
 
-**依赖**：Python 3 + ffmpeg + numpy + scipy（素材链脚本自动用工作区 `.tools/` 下的 ffmpeg）。
+> ⚠️ 源视频请用生成平台正规提供的无水印导出。本 fork 已删除原项目的去水印脚本——按《人工智能生成合成内容标识办法》，对外传播时不应删除或遮盖 AI 生成标识。
+
+**依赖**：Python 3 + ffmpeg + numpy（素材链脚本自动用工作区 `.tools/` 下的 ffmpeg）。
 
 > **本项目全部采用路线 B**（全部动作均为 PR 手工抠像）：对"含第三方物品/透明边缘复杂"的动作，自动 HSV 抠像易残边或误抠，PR 手动遮罩更精细。两条路线产出同一级 `step02/`，后续步骤完全一致；`chroma_step02.py` 保留为自动化兜底，任何动作仍可一键自动生成。
 
@@ -70,7 +71,7 @@ cp step04/*.webm dsh-pet/assets/webm/   # 播放格式（VP9-alpha）
 dsh plugin --profile web add file:D:/path/to/dsh-pet/dsh-pet
 ```
 
-> 中间产物（step01-04）由脚本生成、不入仓库；`video/` 源视频和脚本是成果、入库维护。
+> 中间产物（step02-04）由脚本生成、不入仓库；`video/` 源视频和脚本是成果、入库维护。
 
 ## 🎯 发布（单一 webm 格式）
 

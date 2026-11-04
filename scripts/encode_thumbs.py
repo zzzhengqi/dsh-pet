@@ -3,8 +3,8 @@
 素材处理链的第 4 步（转码）：把归一化后的 1200x1200 透明母版（step03/）
 转成 360x360 播放变体（step04/），供 dsh-pet 插件运行时使用。
 
-完整处理链（与 crop_step01.py / chroma_step02.py / normalize_step03.py 同级）：
-  step01（原始视频）→ crop_step01.py → chroma_step02.py（绿幕抠像）
+完整处理链（与 chroma_step02.py / normalize_step03.py 同级）：
+  video/（原始视频）→ chroma_step02.py（绿幕抠像）
   → step02（透明 810x720）→ normalize_step03.py（归一化 1200x1200 统一站立）
   → step03（母版）→ 本脚本 → step04（360x360 播放变体）
 

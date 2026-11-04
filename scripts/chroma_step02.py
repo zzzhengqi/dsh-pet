@@ -1,4 +1,7 @@
-"""Remove green backgrounds from step01 videos into transparent WebM files in step02/."""
+"""Remove green backgrounds from video/*.mp4 into transparent WebM files in step02/.
+
+源视频请直接用 AI 视频平台导出的无水印版本（平台提供的正规导出选项），本仓库不做去水印处理。
+"""
 
 from __future__ import annotations
 
@@ -11,7 +14,7 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "step01"
+SRC = ROOT / "video"
 OUT = ROOT / "step02"
 # 统一使用工作区自带的 ffmpeg（素材处理链零第三方依赖）
 FFMPEG = str(ROOT / ".tools" / "ffmpeg-9.0.1-essentials_build" / "bin" / "ffmpeg.exe")
