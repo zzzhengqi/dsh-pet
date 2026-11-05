@@ -73,6 +73,8 @@ function createWebServer(routes: RegisteredRoute[], portOf: () => number) {
     get port(): number {
       return portOf();
     },
+    /** 独立模式 / 打包应用的 server 已在进路由前做过回环 Host、跨站与令牌校验（见 ../request-security.ts）。 */
+    preAuthorized: true,
     register(spec: RegisteredRoute): () => void {
       routes.push({ kind: spec.kind, path: spec.path, handler: spec.handler });
       return () => {

@@ -12,6 +12,7 @@ import { failureBody } from '../routes/result.ts';
 import { createPetRouter } from '../routes/index.ts';
 import type { PetRouteDeps } from '../routes/types.ts';
 import type { HostContext } from './context.ts';
+import { guardPluginRequest } from './request-guard.ts';
 
 /** 单次业务请求的处理函数：URL 已解析、方法已归一。 */
 export type HttpRouteHandler = (
@@ -76,6 +77,14 @@ export function registerHttpRoute(ctx: HostContext, handlePetRoute: HttpRouteHan
         kind: 'prefix',
         path: ROUTE_SEGMENT,
         handler: async (req: IncomingMessage, res: ServerResponse) => {
+          // 访问边界：拦跨站网页与 DNS 重绑定（见 ./request-guard.ts），在读请求体之前就拒绝
+          // 独立模式的替身 server 已用令牌鉴权过（文件渲染端合法地带 null 来源），这里只守 DSH 宿主
+          const verdict = ctx.webServer.preAuthorized === true ? { ok: true as const } : guardPluginRequest(req);
+          if (!verdict.ok) {
+            ctx.logger?.warn?.(`[dsh-pet] blocked request (${verdict.reason}): ${req.method ?? ''} ${req.url ?? ''}`);
+            sendJson(res, 403, failureBody('forbidden', 'dsh-pet: cross-site request blocked'));
+            return;
+          }
           // 挂起等待（/playback?wait=）期间调用方可能提前断开：据此中止等待，
           // 否则那个等待者要一直留到超时才回收。'close' 在正常应答后也会触发，但那时监听已摘掉。
           const abort = new AbortController();

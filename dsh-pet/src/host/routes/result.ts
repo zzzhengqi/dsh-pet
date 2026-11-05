@@ -14,6 +14,7 @@ import type { RouteResult } from '../http.ts';
  */
 export type ResultReason =
   | 'bad-request'
+  | 'forbidden'
   | 'generate-error'
   | 'internal-error'
   | 'invalid-json'
